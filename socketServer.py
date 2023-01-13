@@ -1,42 +1,25 @@
+# echo_server.py
+#-*- coding:utf-8 -*-
+
 import socket
-from _thread import *
 
-# 쓰레드에서 실행되는 코드입니다.
-# 접속한 클라이언트마다 새로운 쓰레드가 생성되어 통신을 하게 됩니다.
-def threaded(client_socket, addr):
-    print('Connected by :', addr[0], ':', addr[1])
+# 통신 정보 설정
+IP = ''
+PORT = 5050
+SIZE = 1024
+ADDR = (IP, PORT)
 
-    # 클라이언트가 접속을 끊을 때 까지 반복합니다.
+# 서버 소켓 설정
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
+    server_socket.bind(ADDR)  # 주소 바인딩
+    server_socket.listen()  # 클라이언트의 요청을 받을 준비
+
+    # 무한루프 진입
     while True:
-        try:
-            # 데이터가 수신되면 클라이언트에 다시 전송합니다.(에코)
-            data = client_socket.recv(1024)
-            if not data:
-                print('Disconnected by ' + addr[0],':',addr[1])
-                break
-            print('Received from ' + addr[0],':',addr[1] , data.decode())
-            client_socket.send(data)
-        except ConnectionResetError as e:
-            print('Disconnected by ' + addr[0],':',addr[1])
-            break
-    client_socket.close()
+        client_socket, client_addr = server_socket.accept()  # 수신대기, 접속한 클라이언트 정보 (소켓, 주소) 반환
+        msg = client_socket.recv(SIZE)  # 클라이언트가 보낸 메시지 반환
+        print("[{}] message : {}".format(client_addr,msg))  # 클라이언트가 보낸 메시지 출력
 
+        client_socket.sendall("welcome! ".encode() + msg)  # 클라이언트에게 응답
 
-HOST = '127.0.0.1'
-PORT = 9999
-
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-server_socket.bind((HOST, PORT))
-server_socket.listen()
-
-print('server start')
-
-# 클라이언트가 접속하면 accept 함수에서 새로운 소켓을 리턴합니다.
-# 새로운 쓰레드에서 해당 소켓을 사용하여 통신을 하게 됩니다.
-while True:
-    print('wait')
-    client_socket, addr = server_socket.accept()
-    start_new_thread(threaded, (client_socket, addr))
-
-server_socket.close()
+        client_socket.close()  # 클라이언트 소켓 종료
