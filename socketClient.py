@@ -1,21 +1,19 @@
+# echo_client.py
+#-*- coding:utf-8 -*-
+
 import socket
 
-HOST = '127.0.0.1'
-PORT = 9999
+# 접속 정보 설정
+SERVER_IP = '127.0.0.1'
+SERVER_PORT = 5050
+SIZE = 1024
+SERVER_ADDR = (SERVER_IP, SERVER_PORT)
 
-client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-client_socket.connect((HOST, PORT))
+cmd = input("아무거나 입력하셈 : ")
 
-# 키보드로 입력한 문자열을 서버로 전송하고
-# 서버에서 에코되어 돌아오는 메시지를 받으면 화면에 출력합니다.
-# quit를 입력할 때 까지 반복합니다.
-while True:
-    message = input('Enter Message : ')
-    if message == 'quit':
-    	break
-    client_socket.send(message.encode())
-    data = client_socket.recv(1024)
-
-    print('Received from the server :',repr(data.decode()))
-
-client_socket.close()
+# 클라이언트 소켓 설정
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+    client_socket.connect(SERVER_ADDR)  # 서버에 접속
+    client_socket.send(cmd.encode())  # 서버에 메시지 전송
+    msg = client_socket.recv(SIZE)  # 서버로부터 응답받은 메시지 반환
+    print("resp from server : {}".format(msg))  # 서버로부터 응답받은 메시지 출력
